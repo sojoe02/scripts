@@ -12,51 +12,64 @@ iface = dbus.Interface(player, 'org.freedesktop.MediaPlayer2')
         
 class Player_Handler:
     
-    def notify_info(self):
-        # Read the interface data:
-        info = iface.GetMetadata()
-        # OUT: [dbus.String(u'xesam:album'), dbus.String(u'xesam:title'), dbus.String(u'xesam:trackNumber'), dbus.String(u'xesam:artist'), dbus.String(u'xesam:discNumber'), dbus.String(u'mpris:trackid'), dbus.String(u'mpris:length'), dbus.String(u'mpris:artUrl'), dbus.String(u'xesam:autoRating'), dbus.String(u'xesam:contentCreated'), dbus.String(u'xesam:url')]
-  
+    def notify(self, title, body):
         item              = "org.freedesktop.Notifications"
         path              = "/org/freedesktop/Notifications"
         interface         = "org.freedesktop.Notifications"
-        app_name          = "Test Application"
-        id_num_to_replace = 1
-        icon              = "/usr/share/icons/Tango/32x32/status/sunny.png"
-        title             = str(info['xesam:artist'][0])
-        text              = str(info['xesam:title'])
+        app_name          = "spotify_ctrl"
+        id_num_to_replace = 1 
+        icon              = "/usr/share/icons/hicolor/32x32/apps/spotify-client.png"
         actions_list      = ''
         hint              = ''
-        time              = 10000   # Use seconds x 1000
+        time              = 1000   # Use seconds x 1000
 
         notif = bus.get_object(item, path)
         notify = dbus.Interface(notif, interface)
-        notify.Notify(app_name, id_num_to_replace, icon, 
-                title , text, actions_list, hint, time)
+        notify.Notify(app_name, id_num_to_replace, icon, \
+                title , body, actions_list, hint, time)
+
+
+    def notify_songinfo(self):
+        # Read the interface data:
+        info = iface.GetMetadata()
+        
+        # OUT: [dbus.String(u'xesam:album'), dbus.String(u'xesam:title'), 
+        # dbus.String(u'xesam:trackNumber'), dbus.String(u'xesam:artist'), 
+        # dbus.String(u'xesam:discNumber'), dbus.String(u'mpris:trackid'), 
+        # dbus.String(u'mpris:length'), dbus.String(u'mpris:artUrl'), 
+        # dbus.String(u'xesam:autoRating'), dbus.String(u'xesam:contentCreated'), 
+        # dbus.String(u'xesam:url')]
+        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']))
 
     def next(self):
         iface.Next()
-        self.notify_info()
+        self.notify_songinfo()
 
     def previous(self):
-       iface.Previous()
-       self.notify_info()
+        iface.Previous()
+        self.notify_songinfo()
+
+    def play_pause(self):
+        iface.PlayPause()
+        self.notify_songinfo()
+
+    
 
 handler = Player_Handler()
 
 #Initiating the parser, to call dbus interface methods:
 parser = argparse.ArgumentParser(description=\
-        'Script to control spotify via Dbus and notify via the active notification deamon.',\
-        argument_default='-h')
+        'Script to control spotify via Dbus \
+        and notify via the active notification deamon.')
 
 parser.add_argument('--next',dest='cmd',action='store_const',\
-        const=handler.next,help='Next number on active playlist')
+        const=handler.next, help='Next number on active playlist')
 
 parser.add_argument('--previous',dest='cmd',action='store_const',\
         const=handler.previous,help='Previous number on active playlist')
 
 parser.add_argument('--play_pause',dest='cmd',action='store_const',\
-        const=iface.PlayPause,help='Play/Pause current active number')
+        const=handler.play_pause,help='Play/Pause current active number')
 
 parser.add_argument('--stop',dest='cmd',action='store_const',\
         const=iface.Stop,help='Stop current active number')

@@ -1,0 +1,74 @@
+#!/usr/bin/python2
+
+import dbus
+import argparse
+import sys
+# Setup of Dbus:
+bus = dbus.SessionBus()
+player = bus.get_object('com.spotify.qt', '/')
+# Create the interface:
+iface = dbus.Interface(player, 'org.freedesktop.MediaPlayer2')
+
+        
+class Player_Handler:
+    
+    def notify_info(self):
+        # Read the interface data:
+        info = iface.GetMetadata()
+        # OUT: [dbus.String(u'xesam:album'), dbus.String(u'xesam:title'), dbus.String(u'xesam:trackNumber'), dbus.String(u'xesam:artist'), dbus.String(u'xesam:discNumber'), dbus.String(u'mpris:trackid'), dbus.String(u'mpris:length'), dbus.String(u'mpris:artUrl'), dbus.String(u'xesam:autoRating'), dbus.String(u'xesam:contentCreated'), dbus.String(u'xesam:url')]
+  
+        item              = "org.freedesktop.Notifications"
+        path              = "/org/freedesktop/Notifications"
+        interface         = "org.freedesktop.Notifications"
+        app_name          = "Test Application"
+        id_num_to_replace = 1
+        icon              = "/usr/share/icons/Tango/32x32/status/sunny.png"
+        title             = str(info['xesam:artist'][0])
+        text              = str(info['xesam:title'])
+        actions_list      = ''
+        hint              = ''
+        time              = 10000   # Use seconds x 1000
+
+        notif = bus.get_object(item, path)
+        notify = dbus.Interface(notif, interface)
+        notify.Notify(app_name, id_num_to_replace, icon, 
+                title , text, actions_list, hint, time)
+
+    def next(self):
+        iface.Next()
+        self.notify_info()
+
+    def previous(self):
+       iface.Previous()
+       self.notify_info()
+
+handler = Player_Handler()
+
+#Initiating the parser, to call dbus interface methods:
+parser = argparse.ArgumentParser(description=\
+        'Script to control spotify via Dbus and notify via the active notification deamon.',\
+        argument_default='-h')
+
+parser.add_argument('--next',dest='cmd',action='store_const',\
+        const=handler.next,help='Next number on active playlist')
+
+parser.add_argument('--previous',dest='cmd',action='store_const',\
+        const=handler.previous,help='Previous number on active playlist')
+
+parser.add_argument('--play_pause',dest='cmd',action='store_const',\
+        const=iface.PlayPause,help='Play/Pause current active number')
+
+parser.add_argument('--stop',dest='cmd',action='store_const',\
+        const=iface.Stop,help='Stop current active number')
+
+parser.add_argument('--play',dest='cmd',action='store_const',\
+        const=iface.Play,help='Play current active number')
+
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
+
+
+args = parser.parse_args()
+args.cmd()
+

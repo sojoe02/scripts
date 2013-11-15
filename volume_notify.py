@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from subprocess import call,check_output
 
@@ -40,7 +40,7 @@ get_amixer = check_output(["amixer", "get", "'Master'"])
 volume = pattern_volume.search(str(get_amixer)).group()
 mute = pattern_mute.search(str(get_amixer)).group()
 
-mutestatus = ("sound off" if mute =="[off]" else "sound on")
+mutestatus = ("sound <b>off</b>" if mute =="[off]" else "sound <b>on</b>")
 
 # init Dbus notification:
 item              = "org.freedesktop.Notifications"
@@ -59,6 +59,6 @@ notify = dbus.Interface(notif, interface)
 
 #Notify via the active notication daemon:
 notify.Notify(app_name, id_num_to_replace, icon, \
-        "Volume:" ,volume + " (" + mutestatus +")" , actions_list, hint, time)
+        "Volume:" ,"<b>"+volume+"</b>" + " (" + mutestatus +")" , actions_list, hint, time)
 
 

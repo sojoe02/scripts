@@ -1,0 +1,73 @@
+!!Font setup
+!Xft.antialias: 1
+!Xft.autohint: 1
+!Xft.hinting: 1
+!Xft.hintstyle: hintslight
+!Xft.rgba: rgb
+
+!Xterm setup
+xterm*utf8: 1
+xterm*locale: true
+
+xterm*termName: xterm-color
+xterm*saveLines: 4096
+xterm*visualBell: false
+
+xterm*font: -gohu-gohufont-medium-r-normal--14-100-100-100-c-80-iso8859-1
+!xterm*vt100.initialFont: 4
+
+xterm*foreground: rgb:a8/a8/a8
+xterm*background: rgb:00/00/00
+
+xterm*color0: rgb:00/00/00
+xterm*color1: rgb:a8/00/00
+xterm*color2: rgb:00/a8/00
+xterm*color3: rgb:a8/54/00
+xterm*color4: rgb:00/00/a8
+xterm*color5: rgb:a8/00/a8
+xterm*color6: rgb:00/a8/a8
+xterm*color7: rgb:a8/a8/a8
+xterm*color8: rgb:54/54/54
+xterm*color9: rgb:fc/54/54
+xterm*color10: rgb:54/fc/54
+xterm*color11: rgb:fc/fc/54
+xterm*color12: rgb:54/54/fc
+xterm*color13: rgb:fc/54/fc
+xterm*color14: rgb:54/fc/fc
+xterm*color15: rgb:fc/fc/fc
+
+!Rxtv setup:
+URxvt*foreground: rgb:a8/a8/a8
+URxvt*background: rgb:00/00/00
+
+URxvt*color0: rgb:00/00/00
+URxvt*color1: rgb:a8/00/00
+URxvt*color2: rgb:00/a8/00
+URxvt*color3: rgb:a8/54/00
+URxvt*color4: rgb:00/00/a8
+URxvt*color5: rgb:a8/00/a8
+URxvt*color6: rgb:00/a8/a8
+URxvt*color7: rgb:a8/a8/a8
+URxvt*color8: rgb:54/54/54
+URxvt*color9: rgb:fc/54/54
+URxvt*color10: rgb:54/fc/54
+URxvt*color11: rgb:fc/fc/54
+URxvt*color12: rgb:54/54/fc
+URxvt*color13: rgb:fc/54/fc
+URxvt*color14: rgb:54/fc/fc
+URxvt*color15: rgb:fc/fc/fc
+
+URxvt*saveLines: 4096
+URxvt*font: -gohu-gohufont-medium-r-normal--14-100-100-100-c-80-iso8859-1
+URxvt*scrollBar: false
+
+!extension
+URxvt*perl-ext-common: default,tabbedex
+
+URxvt.tabbed.new-button: no
+URxvt.tabbed.title: yes
+URxvt.tabbed.autohide: yes
+URxvt.tabbed.tabbar-fg: 4
+URxvt.tabbed.tabbar-bg: 0
+URxvt.tabbed.tab-fg:    1
+URxvt.tabbed.tab-bg:    0

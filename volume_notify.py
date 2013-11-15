@@ -40,7 +40,7 @@ get_amixer = check_output(["amixer", "get", "'Master'"])
 volume = pattern_volume.search(str(get_amixer)).group()
 mute = pattern_mute.search(str(get_amixer)).group()
 
-mutestatus = ("sound <b>off</b>" if mute =="[off]" else "sound <b>on</b>")
+mutestatus = ("<s>sound <b>off</b></s>" if mute =="[off]" else "sound <b>on</b>")
 
 # init Dbus notification:
 item              = "org.freedesktop.Notifications"

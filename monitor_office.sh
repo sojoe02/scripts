@@ -11,6 +11,7 @@ elif [ $# -gt 0 ]; then
 		xrandr --output $IN --auto --output $EXT --off 
 	fi
 else
-	xrandr --output $IN --auto --primary --output $EXT --auto --right-of $IN	
+	xrandr --output $IN --auto --primary --output $EXT --auto --right-of $IN
+	sleep(2)	
 	feh --bg-scale /home/sojoe/dropbox/wallpaper-2684320.jpg
 fi

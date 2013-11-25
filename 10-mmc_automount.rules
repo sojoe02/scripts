@@ -2,7 +2,7 @@
 
 # start at mmcblk0p to ignore the system hard drive
 KERNEL=="mmcblk0[a-z]*", GOTO="mount"
-KERNEL=="sd[c-z]?*", GOTO="mount"
+KERNEL=="sd[c-z][0-9]*", GOTO="mount"
 GOTO="mmc_automount_end"
 
 LABEL="mount"

@@ -1,0 +1,11 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =9
+let g:netrw_dirhist_1='/mnt/sda1/Dropbox/Msc'
+let g:netrw_dirhist_2='/mnt/sda1/Documents'
+let g:netrw_dirhist_3='/home/sojoe/.vim/c-support/rc'
+let g:netrw_dirhist_4='/home/sojoe/.vim/c-support'
+let g:netrw_dirhist_5='/home/sojoe/documents/bat/backend/adc/src'
+let g:netrw_dirhist_6='/home/sojoe/documents/bat/backend/adc'
+let g:netrw_dirhist_7='/home/sojoe/documents/bat/backend/adc/src'
+let g:netrw_dirhist_8='/home/sojoe/scripts/i3'
+let g:netrw_dirhist_9='/mnt/sda1/Dropbox/Msc/Report/preamble'

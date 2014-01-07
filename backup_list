@@ -1,0 +1,13 @@
+Path: ~/scripts/backup/
+
+~/.Xdefaults
+~/.xinitrc
+~/.xprofile
+~/.vimrc
+~/.vim/
+~/.i3/
+~/.config/
+
+#Core system files:
+/etc/slim.conf
+/etc/acpi/

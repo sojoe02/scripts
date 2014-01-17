@@ -7,7 +7,11 @@ Path: ~/scripts/backup/
 ~/.vim/
 ~/.i3/
 ~/.config/
+~/.i3status.conf
 
 #Core system files:
 /etc/slim.conf
 /etc/acpi/
+/home/sojoe/.xinitrc
+/home/sojoe/.bash_profile
+/home/sojoe/.bashrc

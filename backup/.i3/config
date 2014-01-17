@@ -183,7 +183,7 @@ exec --no-startup-id feh --bg-scale /home/sojoe/documents/starfield.png
 # Setup of the window bar, remove titles.
 new_window pixel 3
 #
-bindsym XF86ScreenSaver exec i3lock
+bindsym XF86ScreenSaver exec i3lock -i /home/sojoe/documents/tropical_pause.png
 # Multimedia keys:
 bindsym XF86AudioRaiseVolume exec /home/sojoe/scripts/volume_notify.py vol+ 6
 bindsym XF86AudioLowerVolume exec /home/sojoe/scripts/volume_notify.py vol- 6

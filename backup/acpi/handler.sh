@@ -69,7 +69,7 @@ case "$1" in
 	button/lid)
 		case "$3" in
 			close)
-				DISPLAY=:0.0 su sojoe -c /usr/bin/i3lock &	
+				DISPLAY=:0.0 su sojoe -c '/usr/bin/i3lock -i /home/sojoe/documents/tropical_pause.png' &	
 				#usr/bin/sleep 1 &
 				logger 'LID closed' 
 				;;

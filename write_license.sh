@@ -25,8 +25,8 @@ LUA_EXT='(\.lua$)'
 BASH_EXT='(\.sh$)'
 
 #define sed scripts that remove licenses based om language comment types:
-SED_C='/\/\/--begin-license/,/\/\/--end-license/d'
-SED_LUA='/----begin-license/,/----end-license/d'
+SED_C='/\/\/--begin_license/,/\/\/--end_license/d'
+SED_LUA='/----begin_license/,/----end_license/d'
 
 #Insert or update relevant files license information:
 #and take newline and spaces into account:
@@ -40,14 +40,14 @@ while IFS='' read -r file; do
 		#insert language specific commenting:
 		sed -e "s/^/\/\//" $LICENSE_FILE > $LICENSE_TMP
 		#concatonate license and sourcefile:
-		cat $LICENSE_TMP $SRC_TMP > $FILE
+		cat $LICENSE_TMP $SRC_TMP > $file
 	#now do it all again for the Lua files:
 	elif [[ $file =~ $LUA_EXT ]]; then
 		echo "file, $file, is lua type file, applying license.."
 		sed -e $SED_LUA $file > $SRC_TMP
 		sed -e "s/^/--/" $LICENSE_FILE > $LICENSE_TMP
-		cat $LICENSE_TMP $SRC_TMP > $FILE
-	#just as a precaustion do an echo if the file isn't know (can be used to detect errors in the EXT regex):
+		cat $LICENSE_TMP $SRC_TMP > $file
+	#just as a precaution do an echo if the file isn't known (can be used to detect errors in the EXT regex):
 	else
 		echo "file, $file type not known, not applying license!"
 	fi

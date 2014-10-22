@@ -11,5 +11,5 @@ elif [ $# -gt 0 ]; then
 		xrandr --output $IN --auto --output $EXT --off 
 	fi
 else
-	xrandr --output $IN --auto --primary --output $EXT --auto --above $IN
+	xrandr --output $IN --auto --primary --output $EXT --auto --right-of $IN
 fi

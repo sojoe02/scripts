@@ -1,0 +1,28 @@
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+eapol_version=1
+ap_scan=1
+fast_reauth=1
+
+network={
+      ssid="Locomorph"
+      proto=WPA2                 # try WPA RSN if you WPA2 fails
+      key_mgmt=WPA-PSK
+      pairwise=CCMP TKIP
+      group=CCMP TKIP
+      scan_ssid=1
+      psk="RtwoDtwo"
+      priority=10
+}
+
+network={
+        ssid="locokit"
+        proto=WPA2
+        key_mgmt=WPA-PSK
+        pairwise=CCMP TKIP
+        scan_ssid=1
+        psk="locokitrouter"
+        priority=10
+}
+
+

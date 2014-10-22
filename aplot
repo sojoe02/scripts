@@ -1,0 +1,184 @@
+#!/usr/bin/env zsh
+
+# $Id: aplot,v 1.25 2013/11/18 13:23:36 ta Exp $
+
+# Author:      Thor Andreassen <ta@toggle.be>
+# Description: Make amplitude plots from sox-supported signal files easy, sox
+#              is also used for normalising and dc shifting when requested.
+#              Plotting is accomplished with gnuplot.
+
+usage() {
+  echo "
+usage: $PROGNAME SIGNAL_FILE
+
+Generate an A-plot of SIGNAL_FILE using sox and gnuplot
+
+OPTIONS
+  -C CHAN_LIST  Comma separated list of ranges and numbers which list
+                the channels to select.
+  -N            Normalise all channels to -1 to 1.
+  -P            Output to Gnuplot terminal png instead of wxt.
+  -a            Gnuplot autorange.
+  -b SECONDS    Where should the plot start, relative to file start.
+  -c NCHN       Total number of channels in signal.
+  -d            Remove dc-shift from all channels.
+  -e N          Only use every Nth sample.
+  -g            Linear gain to apply.
+  -h            Display this help message.
+  -k            Disable key.
+  -l SECONDS    How much of the file should be plotted, relative to -b
+                or 0 if -b is not given
+  -n            Only list what is to be done.
+  -p            Gnuplot preamble.
+  -r SR         Sample rate of the signal.
+  -v            Be more verbose.
+
+NOTE
+  SECONDS are given as [[HH]:MM:]SS[.F], values in brackets are optional.
+" >&2
+  exit 1
+}
+
+#source ~/etc/libfunctions
+
+#. $ZSHLIB/utils
+zmodload zsh/mathfunc
+
+PROGNAME=${0##*/}
+
+typeset -i rows
+
+DRY_RUN=""
+VERBOSE=""
+NORMALISE=""
+DC_SHIFT=""
+RATE=""
+PREAMBLE=""
+CHAN_LIST=""
+begin=0
+length=""
+AUTORANGE=""
+GAIN=1
+MK_PNG=""
+EVERY=""
+KEY=""
+
+while getopts ":BC:NPab:c:de:g:hkl:np:r:v" opt; do
+  case "$opt" in
+    (C)  CHAN_LIST=$OPTARG  		                               ;;
+    (N)  NORMALISE=y                                               ;;
+    (a)  AUTORANGE=y                                               ;; 
+    (b)  begin=$OPTARG                                             ;;
+    (c)  N_CHANNELS=$OPTARG                                        ;;
+    (d)  DC_SHIFT=y                                                ;;
+    (e)  EVERY="every $OPTARG"                                     ;;
+    (g)  GAIN=$OPTARG                                              ;;
+    (h)  usage                                                     ;;
+    (k)  KEY=y                                                     ;;
+    (l)  length=$OPTARG                                            ;;
+    (n)  DRY_RUN=y                                                 ;;
+    (P)  MK_PNG=y                                                  ;;
+    (p)  [[ -n $PREAMBLE ]] && PREAMBLE+="\n"; PREAMBLE+="$OPTARG" ;;
+    (r)  RATE=$OPTARG                                              ;;
+    (v)  VERBOSE=v                                                 ;;
+    (\?) echo "Invalid option: -$OPTARG"; usage                    ;;
+    (\:) echo "Argument missing";         usage                    ;;
+  esac
+done
+shift $(( OPTIND - 1 )); OPTIND=1
+
+SIGNAL_FILE="$1"
+
+if [[ ! -r $SIGNAL_FILE ]]; then
+  print "$PROGNAME: No such file $SIGNAL_FILE"
+  exit 1
+fi
+
+if [[ $1:e == "" ]]; then
+  if file "$SIGNAL_FILE" | grep -q WAVE; then
+    SYM_LINK=/tmp/${SIGNAL_FILE:t}.wav
+  else
+    SYM_LINK=/tmp/${SIGNAL_FILE:t}.s16
+  fi
+  ln -s $SIGNAL_FILE $SYM_LINK
+  SIGNAL_FILE=$SYM_LINK
+fi
+
+if [[ $SIGNAL_FILE:e =~ (wav|WAV) ]]; then
+  N_CHANNELS=$(soxi -c $SIGNAL_FILE)
+  RATE=$(soxi -r $SIGNAL_FILE)
+elif [[ $SIGNAL_FILE:e == s16 ]]; then
+  [[ -n $N_CHANNELS ]] || N_CHANNELS=4
+  [[ -n $RATE       ]] || RATE=1e6
+elif [[ $SIGNAL_FILE:e =~ f32\|s32 ]]; then
+  # Guess at number of channels and rate if they were not given
+  [[ -n $N_CHANNELS ]] || N_CHANNELS=1
+  [[ -n $RATE       ]] || RATE=48e3
+else 
+  echo "Unknown filetype $1:e." >&2
+  exit 1
+fi
+
+[[ -n $CHAN_LIST ]] || CHAN_LIST=$(seq 1 $N_CHANNELS | tr '\n' ' ')
+
+OUT_CHANNELS=(${(s: :)CHAN_LIST})
+OUT_CHANNELS=$#OUT_CHANNELS
+
+if [[ -n $DRY_RUN ]]; then
+  VISUALISATION="cat"
+else
+  VISUALISATION="gnuplot -persist"
+fi
+
+(
+  rows=$(( ceil($OUT_CHANNELS / 2.) ))
+
+  [[ -n $AUTORANGE ]] || print "set yrange [ -1 : 1 ]"
+  print "$PREAMBLE"
+
+  if [[ -n $KEY ]] && print "set key off"
+
+  if [[ -n $MK_PNG ]]; then
+    print "set term png size 1280,1024"
+  fi
+
+  if [[ $OUT_CHANNELS == 1 ]]; then
+    print "set multiplot layout 1,1"
+  else
+    print "set multiplot layout $rows,2"
+  fi
+
+  for ch in ${=CHAN_LIST}; do
+
+    if [[ -n $DC_SHIFT || -n $NORMALISE ]]; then
+      # Determine channel dc shift and min/max levels
+      sox -r $RATE -c $N_CHANNELS $SIGNAL_FILE -n remix $ch stats 2>&1 \
+      | awk '/DC offset|Min level|Max level/ { printf "%f ", $3 }; END { printf("\n") }' \
+      | read dc_shift min_level max_level
+    fi
+
+    if [[ -z $DC_SHIFT ]]; then
+      dc_shift=0
+    fi
+
+    if [[ -n $NORMALISE ]]; then
+      (( min_level -= dc_shift ))
+      (( max_level -= dc_shift ))
+      if (( abs(min_level) > max_level )); then
+        norm=$(( abs(min_level) ))
+      else
+        norm=$max_level
+      fi
+    else
+      norm=1
+    fi
+
+    print "\
+plot '< sox -D -r $RATE -c $N_CHANNELS \"$SIGNAL_FILE\" -t f64 - remix $ch trim $begin $length' \
+  binary format='%float64' $EVERY using ($begin + \$0/$RATE):($GAIN * (\$1 - $dc_shift) / $norm) with lines title 'Channel $ch'\
+"
+  done
+  print "unset multiplot"
+) | ${=VISUALISATION}
+
+[[ $1:e == "" ]] && rm -f $SIGNAL_FILE

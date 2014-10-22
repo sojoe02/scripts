@@ -1,7 +1,7 @@
 --begin_license--
 
 Copyright 	2013 	Søren Vissing Jørgensen.
-			2014	Søren Vissing Jørgensen, Center for Biorobotics, Sydansk Universitet MMMI.  
+			2014	Søren Vissing Jørgensen, Center for Bio-Robotics, SDU, MMMI.  email:sojoe@gmail.com
 
 This file is part of RANA.
 

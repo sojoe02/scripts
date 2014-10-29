@@ -4,16 +4,24 @@
 #Warning:: this will assume that the networks SSID is the first entry of each of the given entries!
 
 #define the paths:
-WPA_PATH='loco_wifi'
+WPA_PATH='loco_wifi.tmp'
+WPA_ORIG='loco_wifi'
 TMP_FILE='/home/sojoe/scripts/out.tmp'
 WLAN='wlp3s0'
+
+#Make a temporary file to manipulate on:
+`cp $WPA_ORIG $WPA_PATH`
 
 #Catch the currently active terminal:
 TTY=$(tty)
 
+#Network variabes:
 SSID=''
 SECURITY=''
 PASSPHRASE=''
+GROUP=''
+PAIRWISE=''
+CIPHER=""
 
 #---------------------------------------------#
 #FUNCTIONS:
@@ -21,7 +29,38 @@ PASSPHRASE=''
 #Connection function:
 Connect() 
 {
- echo "l"
+ 	echo "l"
+}
+
+#Add an entry to the wpa path:
+Add_Entry()
+{
+	
+
+	echo "network={" >> $WPA_PATH
+	
+
+	for i in "${CELL[@]}" 
+	do
+		#insert the correct cipher(s):
+		if grep -q -P "^(\s*Pairwise\sCiphers)" <<< $i; then
+
+			if [ -z "$CIPHER" ]; then
+				#CIPHER=$(echo -e "\tpairwise=")
+				CIPHER="pairwise="
+				CIPHER="$CIPHER$(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i) "
+			else
+				CIPHER="$CIPHER $(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i) "
+			fi
+		fi
+
+
+
+		#echo "$i"
+	done
+
+	
+	echo "}" >> $WPA_PATH
 }
 
 #Wait Animation function:
@@ -36,6 +75,7 @@ Waiter()
 		sleep $delay
 	done
 
+	echo "$CELL"
 	printf "\n"
 }
 
@@ -113,21 +153,26 @@ echo "Chosen Network Information:"
 echo "-----------------------------------------------"
 
 #Retrieve the cell information:
-COUNTER=0
+COUNTER=1
+#echo $LINE_NUMBER
+
+CELL[0]=$(awk "NR==$LINE_NUMBER-4" $TMP_FILE | sed -e 's/^\s*//' -e '/^$/d' )
+
 while read -r line; do
-	if grep -q -P "Cell\s(\d+)" <<< $line; then break; fi	
-	#echo $line
+	
+	if grep -q -P "Cell\s(\d+)" <<< $line; then break; fi
+
 	if grep -q -v -P "^(\s*IE:\sUnknown:)" <<< $line; then
 		CELL[$COUNTER]="$line"
 		COUNTER=$(expr $COUNTER + 1)
 	fi
-done < <(awk "NR>$LINE_NUMBER" $TMP_FILE ) #process substitution
+
+done < <(awk "NR>=$LINE_NUMBER-3" $TMP_FILE ) #process substitution
 	
 #Print Cell information:
 ( IFS=$'\n'; echo "${CELL[*]}" )
 echo "-----------------------------------------------"
-
-
+Add_Entry
 #Now check if the network allready has an entry in wpa_supplicant.conf:
 
 #Get the linenumber of a specific SSID ... if it exists:
@@ -179,9 +224,13 @@ if [ $LINE_NUMBER ]; then
 				
 			3 )
 				echo "Removing the existing entry, get ready for a replacement prompt:"
+				#first remove the old entry entirely:
 				_line_number=$(expr $LINE_NUMBER - 1)
 				sed -i "$_line_number,$_line_number d" $WPA_PATH
 				sed -i "/ssid=\"$SSID\"/,/}/d" $WPA_PATH
+
+				Add_Entry $SSID	
+
 				break
 				;;
 				

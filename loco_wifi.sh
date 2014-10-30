@@ -20,8 +20,9 @@ SSID=''
 SECURITY=''
 PASSPHRASE=''
 GROUP=''
-PAIRWISE=''
-CIPHER=""
+CIPHER=''
+PRIORITY='10'
+PROTOCOL='WPA2'
 
 #---------------------------------------------#
 #FUNCTIONS:
@@ -35,10 +36,10 @@ Connect()
 #Add an entry to the wpa path:
 Add_Entry()
 {
-	
 
 	echo "network={" >> $WPA_PATH
-	
+
+	echo -e "\tssid=\"$SSID\"" >> $WPA_PATH
 
 	for i in "${CELL[@]}" 
 	do
@@ -48,19 +49,64 @@ Add_Entry()
 			if [ -z "$CIPHER" ]; then
 				#CIPHER=$(echo -e "\tpairwise=")
 				CIPHER="pairwise="
-				CIPHER="$CIPHER$(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i) "
+				CIPHER="$CIPHER$(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i)"
 			else
-				CIPHER="$CIPHER $(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i) "
+				CIPHER="$CIPHER $(sed -e 's/Pairwise\sCiphers\s.*\s:\s//' <<< $i)"
 			fi
 		fi
 
+		if grep -q -P "^(\s*Group\sCipher)" <<< $i; then
+			
+			if [ -z "$GROUP" ]; then
+				GROUP="group="
+				GROUP="$GROUP$(sed -e 's/Group\sCipher\s:\s//' <<< $i)"
 
+			else 
+				GROUP="$GROUP $(sed -e 's/Group\sCipher\s:\s//' <<< $i)"
+			fi
 
+		fi
+
+		if grep -q -P "IE:\.*WPA2\s" <<< $i; then
+			PROTOCOL="WPA2"
+		fi
+
+		if grep -q -P "IE:\.*WPA\s" <<< $i; then
+			PROTOCOL="WPA"
+		fi
+	
 		#echo "$i"
 	done
 
+	echo -e "\tproto=$PROTOCOL" >> $WPA_PATH
 	
+
+	if [ -n "$CIPHER" ]; then
+		echo -e "\t$CIPHER" >> $WPA_PATH
+	fi
+
+	if [ -n "$GROUP" ]; then
+		echo -e "\t$GROUP" >> $WPA_PATH
+	fi
+
+	local priority=0	
+	echo "Enter the priority press enter for default(10):"
+	read priority < $TTY
+	if [ -n "$priority" ]; then
+		PRIORITY=$priority
+	fi
+	echo -e "\tpriority=$PRIORITY" >> $WPA_PATH
+
+	local pass=1234
+	echo "Enter the networks passphrase:"
+	read pass < $TTY
+	echo -e "\tpsk=$pass" >> $WPA_PATH
+
+		
+
 	echo "}" >> $WPA_PATH
+
+	exit
 }
 
 #Wait Animation function:

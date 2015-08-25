@@ -10,12 +10,16 @@ set encoding=utf8
 "enable mouse in vim
 set mouse=a
 
+"disable the pesky external mode.
+nnoremap Q <nop>
+
 "toolbar stuff:
 set guioptions-=m
 set guioptions-=T
 set guioptions-=r "righthand scrollbar disable.
 
-"latex:
+set autoread
+
 " REQUIRED. This makes vim invoke Latex-Suite when you open a tex file.
 filetype plugin on
 

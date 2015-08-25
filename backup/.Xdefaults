@@ -39,7 +39,7 @@ xterm*color15: rgb:fc/fc/fc
 !Rxtv setup:
 URxvt*foreground: rgb:a8/a8/a8
 !URxvt*background: rgb:00/00/00
-URxvt*background: #060726
+URxvt*background: rgb:00/00/00
 
 !Transparency:
 !URxvt.depth: 32
@@ -64,8 +64,14 @@ URxvt*color15: rgb:fc/fc/fc
 
 URxvt*saveLines: 4096
 URxvt*font: -gohu-gohufont-medium-r-normal--14-100-100-100-c-80-iso8859-1
-URxvt*scrollBar: false
+URxvt*scrollBar: false 
+!URxvt*font: -*-dina-medium-r-normal--13-*-*-*-*-*-*-*
+!URxvt.font: xft:DejaVu Sans Mono:pixelsize=16
+! :Bind C-0, C-+ and C-= to activate small, medium, and big font size resp.     
+URxvt.keysym.Control-0: command:\033]710;-*-dina-medium-r-normal--13-*-*-*-*-*-*-*\007
+URxvt.keysym.Control-minus: command:\033]710;xft:DejaVu Sans Mono:pixelsize=16\007
 
+!URxvt.keysym.Control-equal: command:\033]710;-*-dejavu serif-*-r-*-*-*-*-*-*-*-*-*-*\007
 !extension
 URxvt*perl-ext-common: default,tabbedex
 

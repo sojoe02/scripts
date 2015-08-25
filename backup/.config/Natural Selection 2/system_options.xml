@@ -1,9 +1,0 @@
-<options>
-    <system>
-        <runs>3</runs>
-        <build>261</build>
-    </system>
-    <graphics>
-        <device>OpenGL</device>
-    </graphics>
-</options>

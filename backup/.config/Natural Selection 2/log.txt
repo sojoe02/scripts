@@ -1,9 +1,0 @@
-Date: 12/16/13
-Time: 11:35:12:
---------------------------------------------------------------
-Build 261
-Linux
-Steam initialized
-Num displays: 2
-Error: OpenGL version 3.1 is required
-Error: Couldn't initialize the render device.

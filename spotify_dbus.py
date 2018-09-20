@@ -5,9 +5,10 @@ import argparse
 import sys
 # Setup of Dbus:
 bus = dbus.SessionBus()
-player = bus.get_object('com.spotify.qt', '/')
+player = bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2')
 # Create the interface:
-iface = dbus.Interface(player, 'org.freedesktop.MediaPlayer2')
+iface = dbus.Interface(player, 'org.mpris.MediaPlayer2.Player')
+prob_iface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
 
         
 class Player_Handler:
@@ -31,8 +32,9 @@ class Player_Handler:
 
     def notify_songinfo(self):
         # Read the interface data:
-        info = iface.GetMetadata()
-        
+        #info = iface.GetMetadata()
+        info = prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
+        # print(info)
         # OUT: [dbus.String(u'xesam:album'), dbus.String(u'xesam:title'), 
         # dbus.String(u'xesam:trackNumber'), dbus.String(u'xesam:artist'), 
         # dbus.String(u'xesam:discNumber'), dbus.String(u'mpris:trackid'), 

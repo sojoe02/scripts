@@ -20,23 +20,17 @@ cache_path.mkdir(parents=True, exist_ok=True)
 print (cache_path)
 
 class AlbumArt_Handler:
-    #def get_imagePath(self, image_path):
-        
+    
     def check_image(self, spotify_path):
-        print(spotify_path)
         hash = spotify_path.split('/')[-1]
         image_path = cache_path / hash
         print (image_path)
         if image_path.exists():
-            print('path exists ... doing nothing')
             return image_path
         else:
             request = requests.get(spotify_path)
             open(image_path, 'wb').write(request.content)
-            print('path doe not exist doing something')
             return image_path
-
-
 
 class Player_Handler:
     
@@ -50,33 +44,23 @@ class Player_Handler:
         print (icon)
         actions_list      = ''
         hint              = ''
-        delay              = 1000   # Use seconds x 1000
+        delay              = 1500   # Use seconds x 1000
+
         body = '<span font="14">' + body + '</span>'
         title = '<span font="16">' + title+ '</span>'
 
         notif = bus.get_object(item, path)
         notify = dbus.Interface(notif, interface)
+        #Send the notification data to the notification server:
         notify.Notify(app_name, id_num_to_replace, album_art, title, body, actions_list, hint, delay)
-
 
     def notify_songinfo(self):
         # Read the interface data:
         time.sleep(.2)
         info = prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
-
         art_handler = AlbumArt_Handler()
         image_path = art_handler.check_image(str(info['mpris:artUrl']))
-        print(type(image_path))
-        print(image_path.as_posix())
-
-
-        # print(info)
-        # OUT: [dbus.String(u'xesam:album'), dbus.String(u'xesam:title'), 
-        # dbus.String(u'xesam:trackNumber'), dbus.String(u'xesam:artist'), 
-        # dbus.String(u'xesam:discNumber'), dbus.String(u'mpris:trackid'), 
-        # dbus.String(u'mpris:length'), dbus.String(u'mpris:artUrl'), 
-        # dbus.String(u'xesam:autoRating'), dbus.String(u'xesam:contentCreated'), 
-        # dbus.String(u'xesam:url')]
+        #Send it to the notificatin method
         self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), image_path.as_posix())
 
     def next(self):
@@ -95,10 +79,7 @@ class Player_Handler:
         iface.Play
         self.notify_songinfo()
 
-    
-
 handler = Player_Handler()
-
 #Initiating the parser, to call dbus interface methods:
 parser = argparse.ArgumentParser(description=\
         'Script to control spotify via Dbus \

@@ -51,7 +51,8 @@ class Player_Handler:
         actions_list      = ''
         hint              = ''
         delay              = 1000   # Use seconds x 1000
-        body = '<b>' + body + '</b>'
+        body = '<span font="14">' + body + '</span>'
+        title = '<span font="16">' + title+ '</span>'
 
         notif = bus.get_object(item, path)
         notify = dbus.Interface(notif, interface)

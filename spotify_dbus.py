@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import time
 import dbus
 import argparse
 import sys
@@ -13,25 +13,26 @@ prob_iface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
         
 class Player_Handler:
     
-    def notify(self, title, body):
+    def notify(self, title, body, icon):
         item              = "org.freedesktop.Notifications"
         path              = "/org/freedesktop/Notifications"
         interface         = "org.freedesktop.Notifications"
         app_name          = "spotify_ctrl"
         id_num_to_replace = 1 
-        icon              = "/usr/share/icons/hicolor/32x32/apps/spotify-client.png"
+        icon              ="/usr/share/icons/hicolor/32x32/apps/spotify.png"
+        print (icon)
         actions_list      = ''
         hint              = ''
-        time              = 1000   # Use seconds x 1000
+        delay              = 1000   # Use seconds x 1000
 
         notif = bus.get_object(item, path)
         notify = dbus.Interface(notif, interface)
-        notify.Notify(app_name, id_num_to_replace, icon, \
-                title , body, actions_list, hint, time)
+        notify.Notify(app_name, id_num_to_replace, icon, title, body, actions_list, hint, delay)
 
 
     def notify_songinfo(self):
         # Read the interface data:
+        time.sleep(.1)
         #info = iface.GetMetadata()
         info = prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
         # print(info)
@@ -41,7 +42,7 @@ class Player_Handler:
         # dbus.String(u'mpris:length'), dbus.String(u'mpris:artUrl'), 
         # dbus.String(u'xesam:autoRating'), dbus.String(u'xesam:contentCreated'), 
         # dbus.String(u'xesam:url')]
-        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']))
+        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), str(info['mpris:artUrl']))
 
     def next(self):
         iface.Next()

@@ -6,6 +6,7 @@ import dbus
 import argparse
 import sys
 import imghdr
+import logging
 
 from pathlib import Path
 
@@ -17,6 +18,18 @@ bus = dbus.SessionBus()
 cache_path = Path('~/.cache/spotify_control').expanduser()
 # Create the directory if it does not exist:
 cache_path.mkdir(parents=True, exist_ok=True)
+
+# Set up logging (mostly for the sake of the requests)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+log_handler = logging.FileHandler(cache_path / 'log', mode='a', encoding=None, delay=False)
+log_handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log_handler.setFormatter(formatter)
+
+logger.addHandler(log_handler)
 
 ###
 # Handles album art path and type checks via the spotify metadata field and the pre-defined cache dir
@@ -37,20 +50,28 @@ class Album_Art_Handler:
         if not image_path.exists() :
 
             # Try and look it up via the hash given by spotify
-            request = requests.get(spotify_path_str)
+            try :
+                request = requests.get(spotify_path_str, timeout=1.5)
                 
-            # If the request is successful retrieve the image at the destination
-            if request.status_code == requests.codes.ok : 
-                open(image_path, 'wb').write(request.content)
+                # If the request is successful retrieve the image at the destination
+                if request.status_code == requests.codes.ok : 
+                    open(image_path, 'wb').write(request.content)
                 
-                # Check if the retrieved file is indeed an image
-                if not imghdr.what(image_path) is None :        
-                    # Set the return path string to the newly aquired image as a string
-                    return_path_str = image_path.as_posix()
+                    # Check if the retrieved file is indeed an image
+                    if not imghdr.what(image_path) is None :        
+                        # Set the return path string to the newly aquired image as a string
+                        return_path_str = image_path.as_posix()
 
-                else :
-                    # If it is not an image remove the file
-                    image_path.unlink()
+                    else :
+                        # If it is not an image remove the file
+                        logger.warning('Retrieved file is not a valid image file')
+                        image_path.unlink()
+
+            except requests.exceptions.Timeout:
+                logger.error('Timeout on album art retrieval request')
+            except requests.exceptions.RequestException as e:
+                logger.error(e)
+                
             
         else:
             return_path_str = image_path.as_posix()
@@ -107,12 +128,16 @@ class Notification_Handler:
 class Player_Handler:
 
     def __init__(self):
+
         #Get the dbus object
         self.player_object = bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2')
-
         # Create the interface:
         self.iface = dbus.Interface(self.player_object, 'org.mpris.MediaPlayer2.Player')
-        self.notifier = Notification_Handler(self.player_object) 
+    
+        try:
+            self.notifier = Notification_Handler(self.player_object) 
+        except dbus.exceptions.DBusException as e:
+            logger.warning(e)
 
     def next(self):
 
@@ -138,28 +163,34 @@ class Player_Handler:
 
         self.iface.Stop
     
-# Make a handler instance to handle all the Spotify and notification control
-player = Player_Handler()
+# Make a handler instance to handle Spotify and notification control
 
-# Initiating the parser, to call dbus interface methods:
 parser = argparse.ArgumentParser(description=\
         'Script to control spotify via Dbus \
         and notify via the active notification deamon.')
 
-parser.add_argument('--next',dest='cmd',action='store_const',\
+# Handle potential Dbus errors on the player side:
+try:
+    player = Player_Handler()
+
+    # Initiate parser commands:
+    parser.add_argument('--next',dest='cmd',action='store_const',\
         const=player.next, help='Next number on active playlist')
 
-parser.add_argument('--previous',dest='cmd',action='store_const',\
+    parser.add_argument('--previous',dest='cmd',action='store_const',\
         const=player.previous,help='Previous number on active playlist')
 
-parser.add_argument('--play_pause',dest='cmd',action='store_const',\
+    parser.add_argument('--play_pause',dest='cmd',action='store_const',\
         const=player.play_pause,help='Play/Pause current active number')
 
-parser.add_argument('--stop',dest='cmd',action='store_const',\
+    parser.add_argument('--stop',dest='cmd',action='store_const',\
         const=player.stop,help='Stop current active number')
 
-parser.add_argument('--play',dest='cmd',action='store_const',\
+    parser.add_argument('--play',dest='cmd',action='store_const',\
         const=player.play,help='Play current active number')
+
+except dbus.exceptions.DBusException as e:
+    logger.error(e)
 
 if len(sys.argv) == 1:
     parser.print_help()

@@ -12,11 +12,6 @@ from pathlib import Path
 # Setup of Dbus:
 # Grab the session bus and spotify object
 bus = dbus.SessionBus()
-player = bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2')
-
-# Create the interface:
-iface = dbus.Interface(player, 'org.mpris.MediaPlayer2.Player')
-prob_iface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
 
 # Set a directory for the album-art cache:
 cache_path = Path('~/.cache/spotify_control').expanduser()
@@ -63,19 +58,23 @@ class Album_Art_Handler:
         return return_path_str
 
 ###
-# Handles all dbus communication between the given control arguments, Spotify and the notification server (Dunst)
-###
-class Player_Handler:
-    
+# Handles communication with the notification server (Dunst)
+##
+class Notification_Handler:
+
+    app_name = "spotify_ctrl"
+    id_num_to_replace = 1
+    actions_list = ''
+    hint = ''
+    delay = 1500
+
+    def __init__(self, player_object):
+
+        self.notifier_object = bus.get_object('org.freedesktop.Notifications', '/org/freedesktop/Notifications')
+        self.iface = dbus.Interface(self.notifier_object, 'org.freedesktop.Notifications')
+        self.prob_iface = dbus.Interface(player_object, 'org.freedesktop.DBus.Properties')
+
     def notify(self, title, body, album_art):
-        item              = "org.freedesktop.Notifications"
-        path              = "/org/freedesktop/Notifications"
-        interface         = "org.freedesktop.Notifications"
-        app_name          = "spotify_ctrl"
-        id_num_to_replace = 1 
-        actions_list      = ''
-        hint              = ''
-        delay              = 1500   # Use seconds x 1000
 
         # Replace '&' with 'and' because of some quirk in dunsts pango engine
         body = body.replace('&', 'and')
@@ -84,16 +83,14 @@ class Player_Handler:
         title = title.replace('&', 'and')
         title = '<span size="large" font_weight="bold">' + title+ '</span>'
 
-        notif = bus.get_object(item, path)
-        notify = dbus.Interface(notif, interface)
         # Send the notification data to the notification server:
-        notify.Notify(app_name, id_num_to_replace, album_art, title, body, actions_list, hint, delay)
+        self.iface.Notify(self.app_name, self.id_num_to_replace, album_art, title, body, self.actions_list, self.hint, self.delay)
 
     def notify_songinfo(self):
         # Give Spotify a bit of time to update the metadata attribute.
         time.sleep(.2)
-        # Read the interface data:
-        info = prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
+        # Read property interface data:
+        info = self.prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
 
         # Grab a path to the album art image via the 'AlbumArt_Handler
         art_handler = Album_Art_Handler()
@@ -102,24 +99,47 @@ class Player_Handler:
         # Send it to the notification method
         self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), image_path_str)
 
+    
+
+###
+# Handles all dbus communication between the given control arguments and the media player (Spotify)
+###
+class Player_Handler:
+
+    def __init__(self):
+        #Get the dbus object
+        self.player_object = bus.get_object('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2')
+
+        # Create the interface:
+        self.iface = dbus.Interface(self.player_object, 'org.mpris.MediaPlayer2.Player')
+        self.notifier = Notification_Handler(self.player_object) 
+
     def next(self):
-        iface.Next()
-        self.notify_songinfo()
+
+        self.iface.Next()
+        self.notifier.notify_songinfo()
 
     def previous(self):
-        iface.Previous()
-        self.notify_songinfo()
+
+        self.iface.Previous()
+        self.notifier.notify_songinfo()
 
     def play_pause(self):
-        iface.PlayPause()
-        self.notify_songinfo()
+
+        self.iface.PlayPause()
+        self.notifier.notify_songinfo()
 
     def play(self):
-        iface.Play
-        self.notify_songinfo()
+
+        self.iface.Play
+        self.notifier.notify_songinfo()
+
+    def stop(self):
+
+        self.iface.Stop
     
 # Make a handler instance to handle all the Spotify and notification control
-handler = Player_Handler()
+player = Player_Handler()
 
 # Initiating the parser, to call dbus interface methods:
 parser = argparse.ArgumentParser(description=\
@@ -127,19 +147,19 @@ parser = argparse.ArgumentParser(description=\
         and notify via the active notification deamon.')
 
 parser.add_argument('--next',dest='cmd',action='store_const',\
-        const=handler.next, help='Next number on active playlist')
+        const=player.next, help='Next number on active playlist')
 
 parser.add_argument('--previous',dest='cmd',action='store_const',\
-        const=handler.previous,help='Previous number on active playlist')
+        const=player.previous,help='Previous number on active playlist')
 
 parser.add_argument('--play_pause',dest='cmd',action='store_const',\
-        const=handler.play_pause,help='Play/Pause current active number')
+        const=player.play_pause,help='Play/Pause current active number')
 
 parser.add_argument('--stop',dest='cmd',action='store_const',\
-        const=iface.Stop,help='Stop current active number')
+        const=player.stop,help='Stop current active number')
 
 parser.add_argument('--play',dest='cmd',action='store_const',\
-        const=handler.play,help='Play current active number')
+        const=player.play,help='Play current active number')
 
 if len(sys.argv) == 1:
     parser.print_help()

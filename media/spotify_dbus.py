@@ -134,34 +134,38 @@ class Player_Handler:
         # Create the interface:
         self.iface = dbus.Interface(self.player_object, 'org.mpris.MediaPlayer2.Player')
     
-        try:
+    def notify(self):
+
+        try:            
             self.notifier = Notification_Handler(self.player_object) 
+            self.notifier.notify_songinfo()
         except dbus.exceptions.DBusException as e:
             logger.warning(e)
 
     def next(self):
 
         self.iface.Next()
-        self.notifier.notify_songinfo()
+        self.notify()
 
     def previous(self):
 
         self.iface.Previous()
-        self.notifier.notify_songinfo()
+        self.notify()
 
     def play_pause(self):
 
         self.iface.PlayPause()
-        self.notifier.notify_songinfo()
+        self.notify()
 
     def play(self):
 
         self.iface.Play
-        self.notifier.notify_songinfo()
+        self.notify()
 
     def stop(self):
 
         self.iface.Stop
+        self.notify()
     
 # Make a handler instance to handle Spotify and notification control
 

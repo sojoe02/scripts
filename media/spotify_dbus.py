@@ -98,10 +98,10 @@ class Notification_Handler:
     def notify(self, title, body, album_art):
 
         # Replace '&' with 'and' because of some quirk in dunsts pango engine
-        body = body.replace('&', 'and')
+        body = body.replace('&', '&amp;')
         body = '<span size="x-large">' + body + '</span>'
        
-        title = title.replace('&', 'and')
+        title = title.replace('&', '&amp;')
         title = '<span size="large" font_weight="bold">' + title+ '</span>'
 
         # Send the notification data to the notification server:

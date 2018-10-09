@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 
 # Setup of Dbus:
-# Grab the session bus and spotify object
+# Grab the session bus
 bus = dbus.SessionBus()
 
 # Set a directory for the album-art cache:
@@ -159,48 +159,55 @@ class Player_Handler:
 
     def play(self):
 
-        self.iface.Play
+        self.iface.Play()
         self.notify()
 
     def stop(self):
 
-        self.iface.Stop
+        self.iface.Stop()
+        self.notify()
+
+    def openUri(self, uri):
+
+        self.iface.OpenUri(uri)
+        self.iface.Play()
         self.notify()
     
 # Make a handler instance to handle Spotify and notification control
-
 parser = argparse.ArgumentParser(description=\
         'Script to control spotify via Dbus \
         and notify via the active notification deamon.')
 
-# Handle potential Dbus errors on the player side:
-try:
-    player = Player_Handler()
-
-    # Initiate parser commands:
-    parser.add_argument('--next',dest='cmd',action='store_const',\
-        const=player.next, help='Next number on active playlist')
-
-    parser.add_argument('--previous',dest='cmd',action='store_const',\
-        const=player.previous,help='Previous number on active playlist')
-
-    parser.add_argument('--play_pause',dest='cmd',action='store_const',\
-        const=player.play_pause,help='Play/Pause current active number')
-
-    parser.add_argument('--stop',dest='cmd',action='store_const',\
-        const=player.stop,help='Stop current active number')
-
-    parser.add_argument('--play',dest='cmd',action='store_const',\
-        const=player.play,help='Play current active number')
-
-except dbus.exceptions.DBusException as e:
-    logger.error(e)
+# Initiate parser commands:
+parser.add_argument('--next', dest='next', action='store_const',const='next', help='Next number on active playlist')
+parser.add_argument('--previous', dest='previous', action='store_const', const='previous', help='Previous number on active playlist')
+parser.add_argument('--play_pause', dest='play_pause', action='store_const', const='play_pause', help='Play/Pause current active number')
+parser.add_argument('--stop', dest='stop', action='store_const', const='stop', help='Stop current active number')
+parser.add_argument('--play', dest='play', action='store_const', const='play', help='Play current active number')
+parser.add_argument('--openUri',dest='uri', nargs=1, help='Goto a Spotify URI and play it..')
 
 if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
 
-
 args = parser.parse_args()
-args.cmd()
 
+# Initiate the player handler and handle potential Dbus errors:
+try:
+    player = Player_Handler()
+
+    if args.next is not None :
+        player.next()
+    elif args.previous is not None:
+        player.previous()
+    elif args.play_pause is not None:
+        player.play_pause()
+    elif args.stop is not None:
+        player.stop()
+    elif args.play is not None:
+        player.play()
+    elif args.uri is not None:
+        player.openUri(args.uri[0])
+
+except dbus.exceptions.DBusException as e:
+    logger.error(e)

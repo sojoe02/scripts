@@ -95,14 +95,15 @@ class Notification_Handler:
         self.iface = dbus.Interface(self.notifier_object, 'org.freedesktop.Notifications')
         self.prob_iface = dbus.Interface(player_object, 'org.freedesktop.DBus.Properties')
 
-    def notify(self, title, body, album_art):
+    def notify(self, title, body, album_art, playback_status):
 
         # Replace '&' with 'and' because of some quirk in dunsts pango engine
         body = body.replace('&', '&amp;')
-        body = '<span size="x-large">' + body + '</span>'
+        body = '<span size="x-large">' + body + '</span>\n' +\
+            '<span size="large">(' + playback_status + ')</span>'
        
         title = title.replace('&', '&amp;')
-        title = '<span size="large" font_weight="bold">' + title+ '</span>'
+        title = '<span size="x-large" font_weight="bold">' + title+ '</span>'
 
         # Send the notification data to the notification server:
         self.iface.Notify(self.app_name, self.id_num_to_replace, album_art, title, body, self.actions_list, self.hint, self.delay)
@@ -112,13 +113,15 @@ class Notification_Handler:
         time.sleep(.2)
         # Read property interface data:
         info = self.prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
+        playback_status = self.prob_iface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
+        print(playback_status)
 
         # Grab a path to the album art image via the 'AlbumArt_Handler
         art_handler = Album_Art_Handler()
         image_path_str = art_handler.get_image_path_str(str(info['mpris:artUrl']))
 
         # Send it to the notification method
-        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), image_path_str)
+        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), image_path_str, playback_status)
 
     
 

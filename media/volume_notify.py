@@ -18,11 +18,11 @@ if len(sys.argv) == 1:
 #check user arguments and adjust alsamixer accordingly:
 if sys.argv[1] == "vol+":
     if len(sys.argv) == 3:
-        add = sys.argv[2] + "dB+"
+        add = sys.argv[2] + "%+"
         call(["amixer", "-q", "set", "Master", add, "unmute"])
 elif sys.argv[1] == "vol-":
     if len(sys.argv) == 3:
-        add = sys.argv[2] + "dB-"
+        add = sys.argv[2] + "%-"
         call(["amixer", "-q", "set", "Master", add, "unmute"])
 elif sys.argv[1] == "toggle":
     call(["amixer", "-q", "set", "Master", "toggle"])

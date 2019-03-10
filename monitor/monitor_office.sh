@@ -10,7 +10,7 @@ if (xrandr | grep "$EXT disconnected") ; then
 elif [ $# -gt 0 ]; then
 	if [ $1 == "off" ]; then
 		xrandr --output $IN --auto --output $EXT --off --output $EXT2 --off
-		modmap ~/.Xmodmap
+		xmodmap ~/.Xmodmap
 	fi
 else
 	xrandr --output $IN --auto --output $EXT --auto --right-of $IN --primary

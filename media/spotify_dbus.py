@@ -88,6 +88,7 @@ class Notification_Handler:
     actions_list = ''
     hint = ''
     delay = 1500
+    update_delay = .4
 
     def __init__(self, player_object):
 
@@ -110,7 +111,7 @@ class Notification_Handler:
 
     def notify_songinfo(self):
         # Give Spotify a bit of time to update the metadata attribute.
-        time.sleep(.2)
+        time.sleep(self.update_delay)
         # Read property interface data:
         info = self.prob_iface.Get('org.mpris.MediaPlayer2.Player','Metadata')
         playback_status = self.prob_iface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')

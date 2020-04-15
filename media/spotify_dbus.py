@@ -40,8 +40,7 @@ class Album_Art_Handler:
 
     default_icon_path_str ="/usr/share/icons/hicolor/32x32/apps/spotify.png"
 
-    def request_handler(self, url) :
-
+    def request_handler(self, url):
         try:            
             response = requests.get(url, timeout=1.5)
             #logger.info("response %s",response)
@@ -55,7 +54,7 @@ class Album_Art_Handler:
         else:
             return response
 
-    def process_image_url(self, track_url) : 
+    def process_image_url(self, track_url): 
         
         open_url = 'https://open.spotify.com/oembed?url='+track_url        
         response = self.request_handler(open_url)
@@ -64,7 +63,7 @@ class Album_Art_Handler:
         
         return thumbnail_url          
         
-    def get_image_path_str(self, track_url, wrong_url) :
+    def get_image_path_str(self, track_url, wrong_url):
         
         # Get the hash of the image (its file name!)
         hash = wrong_url.split('/')[-1]
@@ -76,17 +75,18 @@ class Album_Art_Handler:
             # Try and look it up via the hash given by spotify
             
             art_url = self.process_image_url(track_url)            
-            art_image = self.request_handler(art_url).content
- 
-            open(image_path, 'wb').write(art_image)            
-            # Check if the retrieved file is indeed an image
-            if not imghdr.what(image_path) is None :        
-            # Set the return path string to the newly aquired image as a string
-                return_path_str = image_path.as_posix()
-            else:
-                # If it is not an image remove the file
-               logger.warning('Retrieved file is not a valid image file')
-               image_path.unlink()
+            if art_url is not None:
+                art_image = self.request_handler(art_url).content
+    
+                open(image_path, 'wb').write(art_image)            
+                # Check if the retrieved file is indeed an image
+                if not imghdr.what(image_path) is None :        
+                # Set the return path string to the newly aquired image as a string
+                    return_path_str = image_path.as_posix()
+                else:
+                    # If it is not an image remove the file
+                   logger.warning('Retrieved file is not a valid image file')
+                   image_path.unlink()
         else :
             return_path_str = image_path.as_posix()
             
@@ -144,10 +144,18 @@ class Notification_Handler:
         # Grab a path to the album art image via the 'AlbumArt_Handler
         art_handler = Album_Art_Handler()
         
-        image_path_str = art_handler.get_image_path_str(str(info['xesam:url']),str(info['mpris:artUrl']))
+        image_path_str = art_handler.get_image_path_str(
+                str(info['xesam:url']),
+                str(info['mpris:artUrl'])
+                )
         
         # Send it to the notification method
-        self.notify(str(info['xesam:artist'][0]), str(info['xesam:title']), image_path_str, playback_status)
+        self.notify(
+                str(info['xesam:artist'][0]), 
+                str(info['xesam:title']), 
+                image_path_str, 
+                playback_status
+                )
     
 ###
 # Handles all dbus communication between the given control arguments and the media player (Spotify)
